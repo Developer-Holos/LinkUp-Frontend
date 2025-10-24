@@ -24,6 +24,10 @@ import {
   FilterList,
   LocationOn,
   Search,
+  Phone,
+  Email,
+  People,
+  FitnessCenter,
 } from '@mui/icons-material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -31,29 +35,32 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
 import 'dayjs/locale/es';
 import MainLayout from '../../components/layout/MainLayout';
-import { afiliadosData } from './afiliadosData';
-import CrearAfiliadoModal from '../../components/modals/CrearAfiliadoModal';
-import EditarAfiliadoModal from '../../components/modals/EditarAfiliadoModal';
+import { sedesData } from './sedesData';
+import CrearSedeModal from '../../components/modals/CrearSedeModal';
+import VerEntrenadoresSedeModal from '../../components/modals/VerEntrenadoresSedeModal';
+import VerEntrenadorModal from '../../components/modals/VerEntrenadorModal';
 
 // Configurar dayjs en español
 dayjs.locale('es');
 
-const Afiliados = () => {
+const Sedes = () => {
   const [selected, setSelected] = useState([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
-  const [attribute, setAttribute] = useState('Property');
+  const [tipoFiltro, setTipoFiltro] = useState('Todos');
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [selectedAfiliado, setSelectedAfiliado] = useState(null);
+  const [isVerEntrenadoresModalOpen, setIsVerEntrenadoresModalOpen] = useState(false);
+  const [isVerEntrenadorModalOpen, setIsVerEntrenadorModalOpen] = useState(false);
+  const [selectedSede, setSelectedSede] = useState(null);
+  const [selectedEntrenador, setSelectedEntrenador] = useState(null);
 
   // Función para manejar selección de todos los elementos
   const handleSelectAll = (event) => {
     if (event.target.checked) {
-      const newSelected = afiliadosData.map((row) => row.id);
+      const newSelected = sedesData.map((row) => row.id);
       setSelected(newSelected);
     } else {
       setSelected([]);
@@ -96,20 +103,25 @@ const Afiliados = () => {
   const handleExport = () => {
     // Preparar los datos para exportar
     const dataToExport = filteredData.map(row => ({
-      'Usuario': row.user,
+      'Nombre': row.nombre,
+      'Dirección': row.direccion,
+      'Ciudad': row.ciudad,
+      'Teléfono': row.telefono,
       'Email': row.email,
-      'Ubicación': row.location,
-      'Estado': row.status,
-      'Fecha de Registro': row.fechaRegistro || 'N/A'
+      'Estado': row.estado,
+      'Tipo': row.tipo,
+      'Entrenadores': row.entrenadores,
+      'Clientes': row.clientes,
+      'Capacidad': row.capacidad
     }));
 
     // Crear el libro de trabajo
     const ws = XLSX.utils.json_to_sheet(dataToExport);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Afiliados');
+    XLSX.utils.book_append_sheet(wb, ws, 'Sedes');
 
     // Generar y descargar el archivo
-    const fileName = `afiliados_${new Date().toISOString().split('T')[0]}.xlsx`;
+    const fileName = `sedes_${new Date().toISOString().split('T')[0]}.xlsx`;
     XLSX.writeFile(wb, fileName);
   };
 
@@ -122,36 +134,50 @@ const Afiliados = () => {
     setIsModalOpen(false);
   };
 
-  const handleSaveAfiliado = (afiliadoData) => {
-    console.log('Nuevo afiliado:', afiliadoData);
-    // Aquí puedes agregar la lógica para guardar el afiliado
+  const handleSaveSede = (sedeData) => {
+    console.log('Nueva sede:', sedeData);
+    // Aquí puedes agregar la lógica para guardar la sede
   };
 
-  // Funciones para modal de editar afiliado
-  const handleEditarAfiliado = (afiliado) => {
-    setSelectedAfiliado(afiliado);
-    setIsEditModalOpen(true);
+  // Funciones para ver entrenadores de una sede
+  const handleVerEntrenadoresSede = (sede) => {
+    setSelectedSede(sede);
+    setIsVerEntrenadoresModalOpen(true);
   };
 
-  const handleCloseEditModal = () => {
-    setIsEditModalOpen(false);
-    setSelectedAfiliado(null);
+  const handleCloseVerEntrenadoresModal = () => {
+    setIsVerEntrenadoresModalOpen(false);
+    setSelectedSede(null);
   };
 
-  const handleSaveEditAfiliado = (afiliadoActualizado) => {
-    console.log('Afiliado actualizado:', afiliadoActualizado);
-    // Aquí puedes agregar la lógica para actualizar el afiliado
+  // Funciones para ver detalles de un entrenador específico
+  const handleVerEntrenadorDetalle = (entrenador) => {
+    setSelectedEntrenador(entrenador);
+    setIsVerEntrenadorModalOpen(true);
+    // Cerrar el modal de lista de entrenadores
+    setIsVerEntrenadoresModalOpen(false);
   };
 
-  // Datos filtrados basados en el término de búsqueda
+  const handleCloseVerEntrenadorModal = () => {
+    setIsVerEntrenadorModalOpen(false);
+    setSelectedEntrenador(null);
+  };
+
+  // Datos filtrados basados en el término de búsqueda y tipo
   const filteredData = useMemo(() => {
-    return afiliadosData.filter((row) =>
-      row.user.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      row.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      row.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      row.status.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [searchTerm]);
+    return sedesData.filter((row) => {
+      const matchesSearch = 
+        row.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        row.direccion.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        row.ciudad.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        row.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        row.estado.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesTipo = tipoFiltro === 'Todos' || row.tipo === tipoFiltro;
+      
+      return matchesSearch && matchesTipo;
+    });
+  }, [searchTerm, tipoFiltro]);
 
   // Datos paginados
   const paginatedData = useMemo(() => {
@@ -159,19 +185,33 @@ const Afiliados = () => {
     return filteredData.slice(startIndex, startIndex + rowsPerPage);
   }, [filteredData, page, rowsPerPage]);
 
+  // Función para obtener el color del estado
+  const getEstadoColor = (estado) => {
+    switch (estado) {
+      case 'Activa':
+        return { bgcolor: '#dcfce7', color: '#166534' };
+      case 'En Mantenimiento':
+        return { bgcolor: '#fef3c7', color: '#92400e' };
+      case 'Inactiva':
+        return { bgcolor: '#fee2e2', color: '#991b1b' };
+      default:
+        return { bgcolor: '#f3f4f6', color: '#374151' };
+    }
+  };
+
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <MainLayout breadcrumbs={['Dashboard', 'Administracion', 'Afiliados']}>
+      <MainLayout breadcrumbs={['Dashboard', 'Administración', 'Sedes']}>
         <Box>
           {/* Header */}
           <Box sx={{ mb: 4 }}>
             <Typography variant="h4" sx={{ fontWeight: 500, color: '#1a1a1a' }}>
-              Lista de Afiliados
+              Lista de Sedes
             </Typography>
           </Box>
 
           <Paper sx={{ p: 3, borderRadius: 2, boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-            {/* Filtros mejorados */}
+            {/* Filtros */}
             <Box
               sx={{
                 display: 'flex',
@@ -181,9 +221,9 @@ const Afiliados = () => {
                 alignItems: 'flex-end',
               }}
             >
-              {/* Search mejorado */}
+              {/* Search */}
               <TextField
-                placeholder="Buscar por nombre, email, etc..."
+                placeholder="Buscar por sede, dirección, ciudad..."
                 variant="outlined"
                 size="small"
                 value={searchTerm}
@@ -243,24 +283,24 @@ const Afiliados = () => {
                 }}
               />
 
-              {/* Attribute */}
+              {/* Tipo de Sede */}
               <TextField
                 select
-                value={attribute}
-                onChange={(e) => setAttribute(e.target.value)}
+                value={tipoFiltro}
+                onChange={(e) => setTipoFiltro(e.target.value)}
                 size="small"
                 sx={{
-                  flex: '1 1 200px',
+                  flex: '1 1 150px',
                   '& .MuiOutlinedInput-root': {
                     bgcolor: 'white',
                     borderRadius: 2,
                   },
                 }}
-                label="Atributo"
+                label="Tipo"
               >
-                <MenuItem value="Property">Propiedad</MenuItem>
-                <MenuItem value="Status">Estado</MenuItem>
-                <MenuItem value="Location">Ubicación</MenuItem>
+                <MenuItem value="Todos">Todos</MenuItem>
+                <MenuItem value="Principal">Principal</MenuItem>
+                <MenuItem value="Sucursal">Sucursal</MenuItem>
               </TextField>
 
               {/* Filter Button */}
@@ -331,15 +371,13 @@ const Afiliados = () => {
                         }}
                       />
                     </TableCell>
-                    <TableCell sx={{ fontWeight: 600, color: '#374151' }}>Usuario</TableCell>
-                    <TableCell sx={{ fontWeight: 600, color: '#374151' }}>Email</TableCell>
-                    <TableCell sx={{ fontWeight: 600, color: '#374151' }}>Ubicación</TableCell>
-                    <TableCell sx={{ fontWeight: 600, color: '#374151' }}>Estado</TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: '#374151' }}>Sede</TableCell>
                     <TableCell sx={{ fontWeight: 600, color: '#374151' }}>Configuración</TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: '#374151' }}>Entrenadores</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {paginatedData.map((row, index) => (
+                  {paginatedData.map((row) => (
                     <TableRow
                       key={row.id}
                       hover
@@ -363,53 +401,39 @@ const Afiliados = () => {
                         />
                       </TableCell>
                       <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                          <Avatar 
-                            sx={{ 
-                              width: 32, 
-                              height: 32, 
-                              bgcolor: '#9333ea',
-                              fontSize: '14px',
-                              fontWeight: 600,
-                            }}
-                          >
-                            {row.user.charAt(0).toUpperCase()}
-                          </Avatar>
-                          <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                            {row.user}
-                          </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <LocationOn sx={{ fontSize: 20, color: '#9333ea' }} />
+                          </Box>
+                          <Box>
+                            <Typography variant="body1" sx={{ fontWeight: 600, mb: 0.5 }}>
+                              {row.nombre}
+                            </Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                              <LocationOn sx={{ fontSize: 14, color: '#6b7280' }} />
+                              <Typography variant="body2" sx={{ color: '#6b7280' }}>
+                                {row.direccion}
+                              </Typography>
+                            </Box>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                              <Phone sx={{ fontSize: 14, color: '#6b7280' }} />
+                              <Typography variant="body2" sx={{ color: '#6b7280' }}>
+                                {row.telefono}
+                              </Typography>
+                            </Box>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Email sx={{ fontSize: 14, color: '#6b7280' }} />
+                              <Typography variant="body2" sx={{ color: '#6b7280' }}>
+                                {row.email}
+                              </Typography>
+                            </Box>
+                          </Box>
                         </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2" sx={{ color: '#6b7280' }}>
-                          {row.email}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <LocationOn sx={{ fontSize: 18, color: '#9333ea' }} />
-                          <Typography variant="body2" sx={{ color: '#6b7280' }}>
-                            {row.location}
-                          </Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={row.status}
-                          size="small"
-                          sx={{
-                            bgcolor: row.status === 'Active' ? '#dcfce7' : '#fef3c7',
-                            color: row.status === 'Active' ? '#166534' : '#92400e',
-                            fontWeight: 500,
-                            borderRadius: 2,
-                          }}
-                        />
                       </TableCell>
                       <TableCell>
                         <Button
                           variant="outlined"
                           size="small"
-                          onClick={() => handleEditarAfiliado(row)}
                           sx={{
                             textTransform: 'none',
                             fontSize: '12px',
@@ -426,6 +450,24 @@ const Afiliados = () => {
                           Editar
                         </Button>
                       </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="text"
+                          size="small"
+                          onClick={() => handleVerEntrenadoresSede(row)}
+                          sx={{
+                            textTransform: 'none',
+                            fontSize: '12px',
+                            fontWeight: 600,
+                            color: '#9333ea',
+                            '&:hover': {
+                              bgcolor: '#f3e8ff',
+                            },
+                          }}
+                        >
+                          Ver
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -436,53 +478,74 @@ const Afiliados = () => {
             <Box
               sx={{
                 display: 'flex',
-                justifyContent: 'flex-end',
+                justifyContent: 'space-between',
                 alignItems: 'center',
                 mt: 2,
               }}
             >
-              <TablePagination
-                component="div"
-                count={filteredData.length}
-                page={page}
-                onPageChange={handleChangePage}
-                rowsPerPage={rowsPerPage}
-                onRowsPerPageChange={handleChangeRowsPerPage}
-                rowsPerPageOptions={[5, 10, 25]}
-                labelRowsPerPage="Filas por página:"
-                labelDisplayedRows={({ from, to, count }) =>
-                  `${from}-${to} de ${count}`
-                }
-                sx={{
-                  '& .MuiTablePagination-selectLabel': {
-                    color: '#6b7280',
-                  },
-                  '& .MuiTablePagination-displayedRows': {
-                    color: '#6b7280',
-                  },
-                }}
-              />
+              <Typography variant="body2" sx={{ color: '#6b7280' }}>
+                Filas por página: {rowsPerPage}
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Typography variant="body2" sx={{ color: '#6b7280' }}>
+                  1-{Math.min(rowsPerPage, filteredData.length)} de {filteredData.length}
+                </Typography>
+                <TablePagination
+                  component="div"
+                  count={filteredData.length}
+                  page={page}
+                  onPageChange={handleChangePage}
+                  rowsPerPage={rowsPerPage}
+                  onRowsPerPageChange={handleChangeRowsPerPage}
+                  rowsPerPageOptions={[5, 10, 25]}
+                  labelRowsPerPage=""
+                  labelDisplayedRows={() => ''}
+                  sx={{
+                    '& .MuiTablePagination-toolbar': {
+                      minHeight: 'auto',
+                      paddingLeft: 0,
+                      paddingRight: 0,
+                    },
+                    '& .MuiTablePagination-selectLabel': {
+                      display: 'none',
+                    },
+                    '& .MuiTablePagination-select': {
+                      display: 'none',
+                    },
+                    '& .MuiTablePagination-displayedRows': {
+                      display: 'none',
+                    },
+                  }}
+                />
+              </Box>
             </Box>
           </Paper>
         </Box>
 
-        {/* Modal para crear afiliado */}
-        <CrearAfiliadoModal
+        {/* Modal para crear sede */}
+        <CrearSedeModal
           open={isModalOpen}
           onClose={handleCloseModal}
-          onSave={handleSaveAfiliado}
+          onSave={handleSaveSede}
         />
 
-        {/* Modal para editar afiliado */}
-        <EditarAfiliadoModal
-          open={isEditModalOpen}
-          onClose={handleCloseEditModal}
-          onSave={handleSaveEditAfiliado}
-          afiliado={selectedAfiliado}
+        {/* Modal para ver entrenadores de una sede */}
+        <VerEntrenadoresSedeModal
+          open={isVerEntrenadoresModalOpen}
+          onClose={handleCloseVerEntrenadoresModal}
+          sede={selectedSede}
+          onVerEntrenador={handleVerEntrenadorDetalle}
+        />
+
+        {/* Modal para ver detalles de un entrenador */}
+        <VerEntrenadorModal
+          open={isVerEntrenadorModalOpen}
+          onClose={handleCloseVerEntrenadorModal}
+          entrenador={selectedEntrenador}
         />
       </MainLayout>
     </LocalizationProvider>
   );
 };
 
-export default Afiliados;
+export default Sedes;

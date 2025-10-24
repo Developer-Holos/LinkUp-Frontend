@@ -161,7 +161,7 @@ const VerifyCode = ({ email, onNext, onBack }) => {
               required
               inputProps={{
                 maxLength: 6,
-                style: { textAlign: 'center', fontSize: '20px', letterSpacing: '8px' }
+                style: { textAlign: 'center', fontSize: '20px' }
               }}
               InputProps={{
                 startAdornment: (

@@ -1,0 +1,107 @@
+// Datos de ejemplo para entrenadores
+export const entrenadoresData = [
+  {
+    id: 1,
+    user: 'Prabodhan Fitzgerald',
+    entrenador: 'Juan Carlos',
+    sede: 'Sede X',
+    email: 'prabodhan.fitzgerald@linkup.com',
+    telefono: '+52 55 1234 5678',
+    accountStatus: 'Active',
+    fechaContratacion: '2024-01-15',
+    especialidad: 'Funcional',
+    experiencia: '5 años',
+    certificaciones: ['NASM', 'CrossFit L1']
+  },
+  {
+    id: 2,
+    user: 'Hiro Joyce',
+    entrenador: 'Juan Carlos',
+    sede: 'Sede X',
+    email: 'hiro.joyce@linkup.com',
+    telefono: '+52 55 2345 6789',
+    accountStatus: 'Active',
+    fechaContratacion: '2024-02-20',
+    especialidad: 'Yoga',
+    experiencia: '3 años',
+    certificaciones: ['RYT-200', 'Vinyasa']
+  },
+  {
+    id: 3,
+    user: 'Lloyd Jefferson',
+    entrenador: 'Juan Carlos',
+    sede: 'Sede X',
+    email: 'lloyd.jefferson@linkup.com',
+    telefono: '+52 55 3456 7890',
+    accountStatus: 'Active',
+    fechaContratacion: '2024-03-10',
+    especialidad: 'Musculación',
+    experiencia: '7 años',
+    certificaciones: ['NSCA', 'ISSA']
+  },
+  {
+    id: 4,
+    user: 'Ceiran Mayo',
+    entrenador: 'Juan Carlos',
+    sede: 'Sede X',
+    email: 'ceiran.mayo@linkup.com',
+    telefono: '+52 55 4567 8901',
+    accountStatus: 'Active',
+    fechaContratacion: '2024-04-05',
+    especialidad: 'Cardio',
+    experiencia: '4 años',
+    certificaciones: ['ACSM', 'Spinning']
+  },
+  {
+    id: 5,
+    user: 'Thumbiko James',
+    entrenador: 'Juan Carlos',
+    sede: 'Sede X',
+    email: 'thumbiko.james@linkup.com',
+    telefono: '+52 55 5678 9012',
+    accountStatus: 'Suspended',
+    fechaContratacion: '2024-05-15',
+    especialidad: 'Pilates',
+    experiencia: '2 años',
+    certificaciones: ['BASI', 'Mat Pilates']
+  },
+  {
+    id: 6,
+    user: 'Maria Rodriguez',
+    entrenador: 'Ana Silva',
+    sede: 'Sede Norte',
+    email: 'maria.rodriguez@linkup.com',
+    telefono: '+52 33 6789 0123',
+    accountStatus: 'Active',
+    fechaContratacion: '2024-06-01',
+    especialidad: 'Zumba',
+    experiencia: '6 años',
+    certificaciones: ['Zumba Basic', 'Aqua Zumba']
+  },
+  {
+    id: 7,
+    user: 'Carlos Mendez',
+    entrenador: 'Pedro Martinez',
+    sede: 'Sede Sur',
+    email: 'carlos.mendez@linkup.com',
+    telefono: '+52 81 7890 1234',
+    accountStatus: 'Active',
+    fechaContratacion: '2024-07-12',
+    especialidad: 'CrossFit',
+    experiencia: '8 años',
+    certificaciones: ['CrossFit L2', 'Olympic Lifting']
+  },
+  {
+    id: 8,
+    user: 'Sofia Lopez',
+    entrenador: 'Laura Garcia',
+    sede: 'Sede Este',
+    email: 'sofia.lopez@linkup.com',
+    telefono: '+52 22 8901 2345',
+    accountStatus: 'Active',
+    fechaContratacion: '2024-08-20',
+    especialidad: 'Natación',
+    experiencia: '10 años',
+    certificaciones: ['WSI', 'Aquatic Fitness']
+  }
+];

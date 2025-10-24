@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Drawer,
   List,
@@ -15,13 +16,25 @@ import {
   AdminPanelSettings,
   ExpandLess,
   ExpandMore,
+  Groups,
+  FitnessCenter,
+  LocationOn,
   StarBorder,
 } from '@mui/icons-material';
 import logoImage from '../../assets/images/logo.png';
 
 const Sidebar = () => {
-  const [openClientes, setOpenClientes] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
   const [openAdministracion, setOpenAdministracion] = useState(true);
+
+  const handleNavigation = (path) => {
+    navigate(path);
+  };
+
+  const isActive = (path) => {
+    return location.pathname === path;
+  };
 
   return (
     <Drawer
@@ -64,35 +77,57 @@ const Sidebar = () => {
       <List sx={{ px: 2 }}>
         {/* Clientes */}
         <ListItem disablePadding>
-          <ListItemButton onClick={() => setOpenClientes(!openClientes)}>
+          <ListItemButton 
+            sx={{
+              bgcolor: isActive('/clientes') ? '#c8e6e3' : 'transparent',
+              '&:hover': {
+                bgcolor: '#b2dfdb',
+              }
+            }}
+            onClick={() => handleNavigation('/clientes')}
+          >
             <ListItemIcon>
-              <PersonOutline />
+              <PersonOutline sx={{
+                color: isActive('/clientes') ? '#059669' : '#6b7280'
+              }} />
             </ListItemIcon>
-            <ListItemText primary="Clientes" />
-            {openClientes ? <ExpandLess /> : <ExpandMore />}
+            <ListItemText 
+              primary="Clientes" 
+              sx={{
+                '& .MuiListItemText-primary': {
+                  fontWeight: isActive('/clientes') ? 600 : 400,
+                  color: isActive('/clientes') ? '#059669' : '#374151'
+                }
+              }}
+            />
           </ListItemButton>
         </ListItem>
-        <Collapse in={openClientes} timeout="auto" unmountOnExit>
-          <List component="div" disablePadding>
-            {[1, 2, 3, 4].map((item) => (
-              <ListItemButton key={item} sx={{ pl: 4 }}>
-                <ListItemIcon>
-                  <StarBorder sx={{ fontSize: 20 }} />
-                </ListItemIcon>
-                <ListItemText primary="List item" />
-              </ListItemButton>
-            ))}
-          </List>
-        </Collapse>
 
         {/* Referidores */}
         <ListItem disablePadding sx={{ mt: 1 }}>
-          <ListItemButton>
+          <ListItemButton
+            sx={{
+              bgcolor: isActive('/referidores') ? '#c8e6e3' : 'transparent',
+              '&:hover': {
+                bgcolor: '#b2dfdb',
+              }
+            }}
+            onClick={() => handleNavigation('/referidores')}
+          >
             <ListItemIcon>
-              <WorkOutline />
+              <WorkOutline sx={{
+                color: isActive('/referidores') ? '#059669' : '#6b7280'
+              }} />
             </ListItemIcon>
-            <ListItemText primary="Referidores" />
-            <ExpandMore />
+            <ListItemText 
+              primary="Referidores" 
+              sx={{
+                '& .MuiListItemText-primary': {
+                  fontWeight: isActive('/referidores') ? 600 : 400,
+                  color: isActive('/referidores') ? '#059669' : '#374151'
+                }
+              }}
+            />
           </ListItemButton>
         </ListItem>
 
@@ -108,23 +143,83 @@ const Sidebar = () => {
         </ListItem>
         <Collapse in={openAdministracion} timeout="auto" unmountOnExit>
           <List component="div" disablePadding>
-            <ListItemButton sx={{ pl: 4, bgcolor: '#c8e6e3' }}>
+            <ListItemButton 
+              sx={{ 
+                pl: 4, 
+                bgcolor: isActive('/afiliados') ? '#c8e6e3' : 'transparent',
+                '&:hover': {
+                  bgcolor: '#b2dfdb',
+                }
+              }}
+              onClick={() => handleNavigation('/afiliados')}
+            >
               <ListItemIcon>
-                <StarBorder sx={{ fontSize: 20 }} />
+                <Groups sx={{ 
+                  fontSize: 20, 
+                  color: isActive('/afiliados') ? '#059669' : '#6b7280' 
+                }} />
               </ListItemIcon>
-              <ListItemText primary="Afiliados" />
+              <ListItemText 
+                primary="Afiliados" 
+                sx={{
+                  '& .MuiListItemText-primary': {
+                    fontWeight: isActive('/afiliados') ? 600 : 400,
+                    color: isActive('/afiliados') ? '#059669' : '#374151'
+                  }
+                }}
+              />
             </ListItemButton>
-            <ListItemButton sx={{ pl: 4 }}>
+            <ListItemButton 
+              sx={{ 
+                pl: 4,
+                bgcolor: isActive('/entrenadores') ? '#c8e6e3' : 'transparent',
+                '&:hover': {
+                  bgcolor: '#b2dfdb',
+                }
+              }}
+              onClick={() => handleNavigation('/entrenadores')}
+            >
               <ListItemIcon>
-                <StarBorder sx={{ fontSize: 20 }} />
+                <FitnessCenter sx={{ 
+                  fontSize: 20, 
+                  color: isActive('/entrenadores') ? '#059669' : '#6b7280' 
+                }} />
               </ListItemIcon>
-              <ListItemText primary="Entrenadores" />
+              <ListItemText 
+                primary="Entrenadores" 
+                sx={{
+                  '& .MuiListItemText-primary': {
+                    fontWeight: isActive('/entrenadores') ? 600 : 400,
+                    color: isActive('/entrenadores') ? '#059669' : '#374151'
+                  }
+                }}
+              />
             </ListItemButton>
-            <ListItemButton sx={{ pl: 4 }}>
+            <ListItemButton 
+              sx={{ 
+                pl: 4,
+                bgcolor: isActive('/sedes') ? '#c8e6e3' : 'transparent',
+                '&:hover': {
+                  bgcolor: '#b2dfdb',
+                }
+              }}
+              onClick={() => handleNavigation('/sedes')}
+            >
               <ListItemIcon>
-                <StarBorder sx={{ fontSize: 20 }} />
+                <LocationOn sx={{ 
+                  fontSize: 20, 
+                  color: isActive('/sedes') ? '#059669' : '#6b7280' 
+                }} />
               </ListItemIcon>
-              <ListItemText primary="Sedes" />
+              <ListItemText 
+                primary="Sedes" 
+                sx={{
+                  '& .MuiListItemText-primary': {
+                    fontWeight: isActive('/sedes') ? 600 : 400,
+                    color: isActive('/sedes') ? '#059669' : '#374151'
+                  }
+                }}
+              />
             </ListItemButton>
           </List>
         </Collapse>

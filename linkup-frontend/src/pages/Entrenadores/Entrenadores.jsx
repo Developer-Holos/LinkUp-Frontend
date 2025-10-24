@@ -24,6 +24,8 @@ import {
   FilterList,
   LocationOn,
   Search,
+  Phone,
+  Email,
 } from '@mui/icons-material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -31,29 +33,31 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
 import 'dayjs/locale/es';
 import MainLayout from '../../components/layout/MainLayout';
-import { afiliadosData } from './afiliadosData';
-import CrearAfiliadoModal from '../../components/modals/CrearAfiliadoModal';
-import EditarAfiliadoModal from '../../components/modals/EditarAfiliadoModal';
+import { entrenadoresData } from './entrenadoresData';
+import CrearEntrenadorModal from '../../components/modals/CrearEntrenadorModal';
+import VerEntrenadorModal from '../../components/modals/VerEntrenadorModal';
+import EditarEntrenadorModal from '../../components/modals/EditarEntrenadorModal';
 
 // Configurar dayjs en español
 dayjs.locale('es');
 
-const Afiliados = () => {
+const Entrenadores = () => {
   const [selected, setSelected] = useState([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
-  const [attribute, setAttribute] = useState('Property');
+  const [sedeFilter, setSedeFilter] = useState('Todos');
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isVerModalOpen, setIsVerModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [selectedAfiliado, setSelectedAfiliado] = useState(null);
+  const [selectedEntrenador, setSelectedEntrenador] = useState(null);
 
   // Función para manejar selección de todos los elementos
   const handleSelectAll = (event) => {
     if (event.target.checked) {
-      const newSelected = afiliadosData.map((row) => row.id);
+      const newSelected = entrenadoresData.map((row) => row.id);
       setSelected(newSelected);
     } else {
       setSelected([]);
@@ -97,19 +101,23 @@ const Afiliados = () => {
     // Preparar los datos para exportar
     const dataToExport = filteredData.map(row => ({
       'Usuario': row.user,
+      'Entrenador': row.entrenador,
+      'Sede': row.sede,
       'Email': row.email,
-      'Ubicación': row.location,
-      'Estado': row.status,
-      'Fecha de Registro': row.fechaRegistro || 'N/A'
+      'Teléfono': row.telefono,
+      'Estado de Cuenta': row.accountStatus,
+      'Especialidad': row.especialidad,
+      'Experiencia': row.experiencia,
+      'Certificaciones': row.certificaciones.join(', ')
     }));
 
     // Crear el libro de trabajo
     const ws = XLSX.utils.json_to_sheet(dataToExport);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Afiliados');
+    XLSX.utils.book_append_sheet(wb, ws, 'Entrenadores');
 
     // Generar y descargar el archivo
-    const fileName = `afiliados_${new Date().toISOString().split('T')[0]}.xlsx`;
+    const fileName = `entrenadores_${new Date().toISOString().split('T')[0]}.xlsx`;
     XLSX.writeFile(wb, fileName);
   };
 
@@ -122,36 +130,53 @@ const Afiliados = () => {
     setIsModalOpen(false);
   };
 
-  const handleSaveAfiliado = (afiliadoData) => {
-    console.log('Nuevo afiliado:', afiliadoData);
-    // Aquí puedes agregar la lógica para guardar el afiliado
+  const handleSaveEntrenador = (entrenadorData) => {
+    console.log('Nuevo entrenador:', entrenadorData);
+    // Aquí puedes agregar la lógica para guardar el entrenador
   };
 
-  // Funciones para modal de editar afiliado
-  const handleEditarAfiliado = (afiliado) => {
-    setSelectedAfiliado(afiliado);
+  // Funciones para modal de ver entrenador
+  const handleVerEntrenador = (entrenador) => {
+    setSelectedEntrenador(entrenador);
+    setIsVerModalOpen(true);
+  };
+
+  const handleCloseVerModal = () => {
+    setIsVerModalOpen(false);
+    setSelectedEntrenador(null);
+  };
+
+  // Funciones para modal de editar entrenador
+  const handleEditarEntrenador = (entrenador) => {
+    setSelectedEntrenador(entrenador);
     setIsEditModalOpen(true);
   };
 
   const handleCloseEditModal = () => {
     setIsEditModalOpen(false);
-    setSelectedAfiliado(null);
+    setSelectedEntrenador(null);
   };
 
-  const handleSaveEditAfiliado = (afiliadoActualizado) => {
-    console.log('Afiliado actualizado:', afiliadoActualizado);
-    // Aquí puedes agregar la lógica para actualizar el afiliado
+  const handleSaveEditEntrenador = (entrenadorActualizado) => {
+    console.log('Entrenador actualizado:', entrenadorActualizado);
+    // Aquí puedes agregar la lógica para actualizar el entrenador
+    // Por ejemplo, actualizar el estado local o hacer una llamada a la API
   };
 
-  // Datos filtrados basados en el término de búsqueda
+  // Datos filtrados basados en el término de búsqueda y sede
   const filteredData = useMemo(() => {
-    return afiliadosData.filter((row) =>
-      row.user.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      row.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      row.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      row.status.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [searchTerm]);
+    return entrenadoresData.filter((row) => {
+      const matchesSearch = 
+        row.user.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        row.entrenador.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        row.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        row.sede.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesSede = sedeFilter === 'Todos' || row.sede === sedeFilter;
+      
+      return matchesSearch && matchesSede;
+    });
+  }, [searchTerm, sedeFilter]);
 
   // Datos paginados
   const paginatedData = useMemo(() => {
@@ -159,19 +184,36 @@ const Afiliados = () => {
     return filteredData.slice(startIndex, startIndex + rowsPerPage);
   }, [filteredData, page, rowsPerPage]);
 
+  // Función para obtener el color del estado
+  const getAccountStatusColor = (status) => {
+    switch (status) {
+      case 'Active':
+        return { bgcolor: '#dcfce7', color: '#166534' };
+      case 'Suspended':
+        return { bgcolor: '#e0e7ff', color: '#3730a3' };
+      case 'Inactive':
+        return { bgcolor: '#fee2e2', color: '#991b1b' };
+      default:
+        return { bgcolor: '#f3f4f6', color: '#374151' };
+    }
+  };
+
+  // Obtener sedes únicas para el filtro
+  const sedesUnicas = [...new Set(entrenadoresData.map(item => item.sede))];
+
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <MainLayout breadcrumbs={['Dashboard', 'Administracion', 'Afiliados']}>
+      <MainLayout breadcrumbs={['Dashboard', 'Administración', 'Entrenadores']}>
         <Box>
           {/* Header */}
           <Box sx={{ mb: 4 }}>
             <Typography variant="h4" sx={{ fontWeight: 500, color: '#1a1a1a' }}>
-              Lista de Afiliados
+              Lista de Entrenadores
             </Typography>
           </Box>
 
           <Paper sx={{ p: 3, borderRadius: 2, boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-            {/* Filtros mejorados */}
+            {/* Filtros */}
             <Box
               sx={{
                 display: 'flex',
@@ -181,7 +223,7 @@ const Afiliados = () => {
                 alignItems: 'flex-end',
               }}
             >
-              {/* Search mejorado */}
+              {/* Search */}
               <TextField
                 placeholder="Buscar por nombre, email, etc..."
                 variant="outlined"
@@ -243,24 +285,29 @@ const Afiliados = () => {
                 }}
               />
 
-              {/* Attribute */}
+              {/* Filtro de Sede */}
               <TextField
                 select
-                value={attribute}
-                onChange={(e) => setAttribute(e.target.value)}
+                value={sedeFilter}
+                onChange={(e) => setSedeFilter(e.target.value)}
                 size="small"
                 sx={{
-                  flex: '1 1 200px',
+                  minWidth: 120,
                   '& .MuiOutlinedInput-root': {
                     bgcolor: 'white',
                     borderRadius: 2,
+                    color: '#06b6d4',
+                    fontWeight: 600,
                   },
                 }}
-                label="Atributo"
+                label="Sede"
               >
-                <MenuItem value="Property">Propiedad</MenuItem>
-                <MenuItem value="Status">Estado</MenuItem>
-                <MenuItem value="Location">Ubicación</MenuItem>
+                <MenuItem value="Todos">Todos</MenuItem>
+                {sedesUnicas.map((sede) => (
+                  <MenuItem key={sede} value={sede}>
+                    {sede}
+                  </MenuItem>
+                ))}
               </TextField>
 
               {/* Filter Button */}
@@ -331,15 +378,15 @@ const Afiliados = () => {
                         }}
                       />
                     </TableCell>
-                    <TableCell sx={{ fontWeight: 600, color: '#374151' }}>Usuario</TableCell>
-                    <TableCell sx={{ fontWeight: 600, color: '#374151' }}>Email</TableCell>
-                    <TableCell sx={{ fontWeight: 600, color: '#374151' }}>Ubicación</TableCell>
-                    <TableCell sx={{ fontWeight: 600, color: '#374151' }}>Estado</TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: '#374151' }}>User</TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: '#374151' }}>Entrenador</TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: '#374151' }}>Sede</TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: '#374151' }}>Account status</TableCell>
                     <TableCell sx={{ fontWeight: 600, color: '#374151' }}>Configuración</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {paginatedData.map((row, index) => (
+                  {paginatedData.map((row) => (
                     <TableRow
                       key={row.id}
                       hover
@@ -363,45 +410,32 @@ const Afiliados = () => {
                         />
                       </TableCell>
                       <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                          <Avatar 
-                            sx={{ 
-                              width: 32, 
-                              height: 32, 
-                              bgcolor: '#9333ea',
-                              fontSize: '14px',
-                              fontWeight: 600,
-                            }}
-                          >
-                            {row.user.charAt(0).toUpperCase()}
-                          </Avatar>
-                          <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                            {row.user}
-                          </Typography>
-                        </Box>
+                        <Typography variant="body2" sx={{ fontWeight: 500, color: '#374151' }}>
+                          {row.user}
+                        </Typography>
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2" sx={{ color: '#6b7280' }}>
-                          {row.email}
+                          {row.entrenador}
                         </Typography>
                       </TableCell>
                       <TableCell>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <LocationOn sx={{ fontSize: 18, color: '#9333ea' }} />
+                          <LocationOn sx={{ fontSize: 16, color: '#6b7280' }} />
                           <Typography variant="body2" sx={{ color: '#6b7280' }}>
-                            {row.location}
+                            {row.sede}
                           </Typography>
                         </Box>
                       </TableCell>
                       <TableCell>
                         <Chip
-                          label={row.status}
+                          label={row.accountStatus}
                           size="small"
                           sx={{
-                            bgcolor: row.status === 'Active' ? '#dcfce7' : '#fef3c7',
-                            color: row.status === 'Active' ? '#166534' : '#92400e',
+                            ...getAccountStatusColor(row.accountStatus),
                             fontWeight: 500,
                             borderRadius: 2,
+                            fontSize: '12px',
                           }}
                         />
                       </TableCell>
@@ -409,7 +443,7 @@ const Afiliados = () => {
                         <Button
                           variant="outlined"
                           size="small"
-                          onClick={() => handleEditarAfiliado(row)}
+                          onClick={() => handleEditarEntrenador(row)}
                           sx={{
                             textTransform: 'none',
                             fontSize: '12px',
@@ -436,53 +470,74 @@ const Afiliados = () => {
             <Box
               sx={{
                 display: 'flex',
-                justifyContent: 'flex-end',
+                justifyContent: 'space-between',
                 alignItems: 'center',
                 mt: 2,
               }}
             >
-              <TablePagination
-                component="div"
-                count={filteredData.length}
-                page={page}
-                onPageChange={handleChangePage}
-                rowsPerPage={rowsPerPage}
-                onRowsPerPageChange={handleChangeRowsPerPage}
-                rowsPerPageOptions={[5, 10, 25]}
-                labelRowsPerPage="Filas por página:"
-                labelDisplayedRows={({ from, to, count }) =>
-                  `${from}-${to} de ${count}`
-                }
-                sx={{
-                  '& .MuiTablePagination-selectLabel': {
-                    color: '#6b7280',
-                  },
-                  '& .MuiTablePagination-displayedRows': {
-                    color: '#6b7280',
-                  },
-                }}
-              />
+              <Typography variant="body2" sx={{ color: '#6b7280' }}>
+                Rows per page: {rowsPerPage}
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Typography variant="body2" sx={{ color: '#6b7280' }}>
+                  1-{Math.min(rowsPerPage, filteredData.length)} of {filteredData.length}
+                </Typography>
+                <TablePagination
+                  component="div"
+                  count={filteredData.length}
+                  page={page}
+                  onPageChange={handleChangePage}
+                  rowsPerPage={rowsPerPage}
+                  onRowsPerPageChange={handleChangeRowsPerPage}
+                  rowsPerPageOptions={[5, 10, 25]}
+                  labelRowsPerPage=""
+                  labelDisplayedRows={() => ''}
+                  sx={{
+                    '& .MuiTablePagination-toolbar': {
+                      minHeight: 'auto',
+                      paddingLeft: 0,
+                      paddingRight: 0,
+                    },
+                    '& .MuiTablePagination-selectLabel': {
+                      display: 'none',
+                    },
+                    '& .MuiTablePagination-select': {
+                      display: 'none',
+                    },
+                    '& .MuiTablePagination-displayedRows': {
+                      display: 'none',
+                    },
+                  }}
+                />
+              </Box>
             </Box>
           </Paper>
         </Box>
 
-        {/* Modal para crear afiliado */}
-        <CrearAfiliadoModal
+        {/* Modal para crear entrenador */}
+        <CrearEntrenadorModal
           open={isModalOpen}
           onClose={handleCloseModal}
-          onSave={handleSaveAfiliado}
+          onSave={handleSaveEntrenador}
         />
 
-        {/* Modal para editar afiliado */}
-        <EditarAfiliadoModal
+        {/* Modal para ver entrenador */}
+        <VerEntrenadorModal
+          open={isVerModalOpen}
+          onClose={handleCloseVerModal}
+          entrenador={selectedEntrenador}
+        />
+
+        {/* Modal para editar entrenador */}
+        <EditarEntrenadorModal
           open={isEditModalOpen}
           onClose={handleCloseEditModal}
-          onSave={handleSaveEditAfiliado}
-          afiliado={selectedAfiliado}
+          onSave={handleSaveEditEntrenador}
+          entrenador={selectedEntrenador}
         />
       </MainLayout>
     </LocalizationProvider>
   );
 };
 
-export default Afiliados;
+export default Entrenadores;
