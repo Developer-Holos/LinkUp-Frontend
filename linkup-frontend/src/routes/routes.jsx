@@ -7,6 +7,7 @@ const Sedes = lazy(() => import("../pages/Sedes/Sedes"));
 const Entrenadores = lazy(() => import("../pages/Entrenadores/Entrenadores"));
 const Clientes = lazy(() => import("../pages/Clientes/Clientes"));
 const Referidores = lazy(() => import("../pages/Referidores/Referidores"));
+const ReporteAccidenteForm = lazy(() => import("../pages/ReporteAccidente/ReporteAccidenteForm"));
 
 const LoadingSpinner = () => (
     <div style={{ 
@@ -40,6 +41,7 @@ export default function AppRoutes() {
                     <Route path="/entrenadores" element={<Entrenadores />} />
                     <Route path="/clientes" element={<Clientes />} />
                     <Route path="/referidores" element={<Referidores />} />
+                    <Route path="/reporte-accidente" element={<ReporteAccidenteForm />} />
 
                     {/* Redirigir rutas no encontradas al inicio */}
                     <Route path="*" element={<Navigate to="/" replace />} />
