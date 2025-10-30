@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import {
   Box,
@@ -18,6 +18,7 @@ import {
   TablePagination,
   InputAdornment,
   MenuItem,
+  LinearProgress,
 } from '@mui/material';
 import {
   FilterList,
@@ -32,11 +33,35 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
 import 'dayjs/locale/es';
 import MainLayout from '../../components/layout/MainLayout';
-import { clientesData } from './clientesData';
+// import { clientesData } from './clientesData';
 import CrearClienteModal from '../../components/modals/CrearClienteModal';
+import { useSearchParams } from 'react-router-dom';
 
 // Configurar dayjs en español
 dayjs.locale('es');
+
+// Lista estática de etapas con sus IDs (nombre y valor)
+const STAGES = [
+  { name: 'Lead information', id: 73075903 },
+  { name: 'Initial contact', id: 73074731 },
+  { name: 'Pending verification', id: 76855675 },
+  { name: 'Qualified lead', id: 73074735 },
+  { name: 'Attorney assigment', id: 73074739 },
+  { name: 'Signed case', id: 73074743 },
+  { name: 'Asigned medical center', id: 73075907 },
+  { name: '1st Appt schedule w/ Med. Center', id: 73075911 },
+  { name: 'therapy follow up', id: 73075915 },
+  { name: 'active', id: 79829423 },
+  { name: 'caution', id: 79829011 },
+  { name: 'inactive', id: 79829427 },
+  { name: 'finalized', id: 73075919 },
+  { name: 'fl attorney validation', id: 76849839 },
+  { name: 'other states validation', id: 76670511 },
+  { name: 'closed won', id: 142 },
+  { name: 'closed lost', id: 143 },
+];
+
+const status_id_TO_NAME = Object.fromEntries(STAGES.map(s => [String(s.id), s.name]));
 
 const Clientes = () => {
   const [selected, setSelected] = useState([]);
@@ -46,11 +71,97 @@ const Clientes = () => {
   const [attributeFilter, setAttributeFilter] = useState('Todos');
   const [startDate, setStartDate] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [clientesData, setClientesData] = useState([]);
+  const [stageIdFilter, setStageIdFilter] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [loading, setLoading] = useState(false);
+
+
+  useEffect(()=>{
+    const fetchClientes = async () => {
+      try {
+        setLoading(true);
+        const isSearching = (searchTerm ?? '').trim().length > 0;
+        const url = isSearching
+          ? '/superadmin/clientes'
+          : (stageIdFilter
+              ? `/superadmin/clientes?status_id=${encodeURIComponent(stageIdFilter)}`
+              : '/superadmin/clientes');
+        const response = await fetch(url, { credentials: 'include' });
+        const {leads} = await response.json();
+        
+        
+        console.log(`leads: ${leads}`)
+
+        // Mapear a la estructura usada por la tabla
+        const mapped = leads.map((item, idx) => {
+          const fullName = [item.first_name, item.last_name].filter(Boolean).join(' ');
+          const user = item.name ?? '';
+          const phone = item.custom_fields_values?.find((cfv)=>cfv.field_id === 981772)?.values?.[0]?.value ?? ''
+          const location = item.custom_fields_values?.find((cfv)=>cfv.field_id === 978440)?.values?.[0]?.value ?? ''
+          const medicalCenter = item.custom_fields_values?.find((cfv)=>cfv.field_id === 978474)?.values?.[0]?.value ?? ''
+          const numberOfTherapies = item.custom_fields_values?.find((cfv)=>cfv.field_id === 988836)?.values?.[0]?.value ?? ''
+          const email = item.email ?? item.correo ?? item.email_address ?? '';
+          const stage = item.stage ?? item.etapa ?? item.status ?? item.estado ?? item.leadStage ?? item.lead_stage ?? item.status_name ?? '';
+          const stageId = item.status_id ?? null;
+          return {
+            id: item.id ?? item._id ?? idx,
+            user,
+            phone,
+            location,
+            medicalCenter,
+            numberOfTherapies,
+            email,
+            stage,
+            stageId,
+            estado: item.estado ?? item.status ?? '',
+            tipo: item.tipo ?? item.type ?? ''
+          };
+        });
+        setClientesData(mapped);
+      } catch (error) {
+        console.error('Error fetching clientes:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchClientes();
+  },[stageIdFilter, searchTerm])
+
+  // Leer status_id de la URL y preseleccionar nombre y ID
+  useEffect(() => {
+    const stageIdFromUrl = searchParams.get('status_id');
+    if (stageIdFromUrl) {
+      const name = status_id_TO_NAME[String(stageIdFromUrl)];
+      if (name) {
+        setAttributeFilter(name);
+        setStageIdFilter(String(stageIdFromUrl));
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Escribir status_id en la URL cuando cambia el select “Etapas”
+  useEffect(() => {
+    const currentId = searchParams.get('status_id');
+    const params = new URLSearchParams(searchParams);
+    if (stageIdFilter) {
+      if (String(stageIdFilter) !== currentId) {
+        params.set('status_id', String(stageIdFilter));
+        setSearchParams(params);
+      }
+    } else if (currentId !== null) {
+      params.delete('status_id');
+      setSearchParams(params);
+    }
+  }, [stageIdFilter, searchParams, setSearchParams]);
+
 
   // Función para manejar selección de todos los elementos
   const handleSelectAll = (event) => {
     if (event.target.checked) {
       const newSelected = clientesData.map((row) => row.id);
+      console.log(newSelected)
       setSelected(newSelected);
     } else {
       setSelected([]);
@@ -130,17 +241,23 @@ const Clientes = () => {
   // Datos filtrados basados en el término de búsqueda y atributo
   const filteredData = useMemo(() => {
     return clientesData.filter((row) => {
-      const matchesSearch = 
-        row.user.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        row.phone.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        row.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        row.medicalCenter.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const matchesAttribute = attributeFilter === 'Todos' || row.location === attributeFilter;
-      
-      return matchesSearch && matchesAttribute;
+      const matchesSearch =
+        String(row.user || '').toLowerCase().includes(String(searchTerm || '').toLowerCase()) ||
+        String(row.phone || '').toLowerCase().includes(String(searchTerm || '').toLowerCase()) ||
+        String(row.location || '').toLowerCase().includes(String(searchTerm || '').toLowerCase()) ||
+        String(row.medicalCenter || '').toLowerCase().includes(String(searchTerm || '').toLowerCase());
+
+      const isSearching = String(searchTerm || '').trim().length > 0;
+      // Si se está buscando, no aplicamos filtro de etapa (equivale a "Todos")
+      const matchesStage = isSearching
+        ? true
+        : (stageIdFilter
+            ? String(row.stageId ?? '') === String(stageIdFilter)
+            : (attributeFilter === 'Todos' || row.stage === attributeFilter));
+
+      return matchesSearch && matchesStage;
     });
-  }, [searchTerm, attributeFilter]);
+  }, [clientesData, searchTerm, attributeFilter, stageIdFilter]);
 
   // Datos paginados
   const paginatedData = useMemo(() => {
@@ -148,8 +265,11 @@ const Clientes = () => {
     return filteredData.slice(startIndex, startIndex + rowsPerPage);
   }, [filteredData, page, rowsPerPage]);
 
-  // Obtener ubicaciones únicas para el filtro
-  const ubicacionesUnicas = [...new Set(clientesData.map(item => item.location))];
+  // Obtener etapas únicas para el filtro (estáticas + dinámicas)
+  const etapasUnicas = Array.from(new Set([
+    ...STAGES.map(s => s.name),
+    ...((clientesData || []).map(item => item.stage).filter(Boolean))
+  ]));
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -219,7 +339,7 @@ const Clientes = () => {
               />
 
               {/* Attribute Filter */}
-              <TextField
+              {/* <TextField
                 select
                 value={attributeFilter}
                 onChange={(e) => setAttributeFilter(e.target.value)}
@@ -233,12 +353,45 @@ const Clientes = () => {
                     fontWeight: 600,
                   },
                 }}
-                label="Attribute"
+                label="Atributte"
               >
                 <MenuItem value="Todos">Todos</MenuItem>
-                {ubicacionesUnicas.map((ubicacion) => (
-                  <MenuItem key={ubicacion} value={ubicacion}>
-                    {ubicacion}
+                {etapasUnicas.map((etapa) => (
+                  <MenuItem key={etapa} value={etapa}>
+                    {etapa}
+                  </MenuItem>
+                ))}
+              </TextField> */}
+
+              {/* Segundo select: Etapas (valor=ID, escribe status_id en URL) */}
+              <TextField
+                select
+                value={stageIdFilter || 'Todos'}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === 'Todos') {
+                    setStageIdFilter('');
+                    setAttributeFilter('Todos');
+                  } else {
+                    setStageIdFilter(String(val));
+                    const name = status_id_TO_NAME[String(val)];
+                    if (name) setAttributeFilter(name);
+                  }
+                }}
+                size="small"
+                sx={{
+                  minWidth: 150,
+                  '& .MuiOutlinedInput-root': {
+                    bgcolor: 'white',
+                    borderRadius: 2,
+                  },
+                }}
+                label="Etapas"
+              >
+                <MenuItem value="Todos">Todos</MenuItem>
+                {STAGES.map(({ name, id }) => (
+                  <MenuItem key={id} value={String(id)}>
+                    {name}
                   </MenuItem>
                 ))}
               </TextField>
@@ -290,8 +443,15 @@ const Clientes = () => {
               </Button>
             </Box>
 
+            {/* Indicador de carga mientras se traen nuevos resultados */}
+            {loading && (
+              <Box sx={{ mb: 2 }}>
+                <LinearProgress />
+              </Box>
+            )}
+
             {/* Tabla */}
-            <TableContainer sx={{ borderRadius: 2, border: '1px solid #f0f0f0' }}>
+            <TableContainer sx={{ borderRadius: 2, border: '1px solid #f0f0f0', opacity: loading ? 0.6 : 1, transition: 'opacity 150ms ease' }} aria-busy={loading}>
               <Table>
                 <TableHead>
                   <TableRow sx={{ bgcolor: '#f8f9fa' }}>
@@ -319,7 +479,13 @@ const Clientes = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {paginatedData.map((row) => (
+                  {paginatedData.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} sx={{ textAlign: 'center', color: '#6b7280' }}>
+                        No hay datos para mostrar
+                      </TableCell>
+                    </TableRow>
+                  ) : paginatedData.map((row) => (
                     <TableRow
                       key={row.id}
                       hover
