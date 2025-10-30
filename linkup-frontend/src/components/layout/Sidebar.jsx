@@ -20,6 +20,7 @@ import {
   FitnessCenter,
   LocationOn,
   StarBorder,
+  School,
 } from '@mui/icons-material';
 import logoImage from '../../assets/images/logo.png';
 
@@ -103,34 +104,6 @@ const Sidebar = () => {
           </ListItemButton>
         </ListItem>
 
-        {/* Referidores */}
-        <ListItem disablePadding sx={{ mt: 1 }}>
-          <ListItemButton
-            sx={{
-              bgcolor: isActive('/referidores') ? '#c8e6e3' : 'transparent',
-              '&:hover': {
-                bgcolor: '#b2dfdb',
-              }
-            }}
-            onClick={() => handleNavigation('/referidores')}
-          >
-            <ListItemIcon>
-              <WorkOutline sx={{
-                color: isActive('/referidores') ? '#059669' : '#6b7280'
-              }} />
-            </ListItemIcon>
-            <ListItemText 
-              primary="Referidores" 
-              sx={{
-                '& .MuiListItemText-primary': {
-                  fontWeight: isActive('/referidores') ? 600 : 400,
-                  color: isActive('/referidores') ? '#059669' : '#374151'
-                }
-              }}
-            />
-          </ListItemButton>
-        </ListItem>
-
         {/* Administración */}
         <ListItem disablePadding sx={{ mt: 1 }}>
           <ListItemButton onClick={() => setOpenAdministracion(!openAdministracion)}>
@@ -198,6 +171,32 @@ const Sidebar = () => {
             <ListItemButton 
               sx={{ 
                 pl: 4,
+                bgcolor: isActive('/entrenados') ? '#c8e6e3' : 'transparent',
+                '&:hover': {
+                  bgcolor: '#b2dfdb',
+                }
+              }}
+              onClick={() => handleNavigation('/entrenados')}
+            >
+              <ListItemIcon>
+                <School sx={{ 
+                  fontSize: 20, 
+                  color: isActive('/entrenados') ? '#059669' : '#6b7280' 
+                }} />
+              </ListItemIcon>
+              <ListItemText 
+                primary="Entrenados" 
+                sx={{
+                  '& .MuiListItemText-primary': {
+                    fontWeight: isActive('/entrenados') ? 600 : 400,
+                    color: isActive('/entrenados') ? '#059669' : '#374151'
+                  }
+                }}
+              />
+            </ListItemButton>
+            <ListItemButton 
+              sx={{ 
+                pl: 4,
                 bgcolor: isActive('/sedes') ? '#c8e6e3' : 'transparent',
                 '&:hover': {
                   bgcolor: '#b2dfdb',
@@ -217,6 +216,32 @@ const Sidebar = () => {
                   '& .MuiListItemText-primary': {
                     fontWeight: isActive('/sedes') ? 600 : 400,
                     color: isActive('/sedes') ? '#059669' : '#374151'
+                  }
+                }}
+              />
+            </ListItemButton>
+            <ListItemButton 
+              sx={{ 
+                pl: 4,
+                bgcolor: isActive('/referidores') ? '#c8e6e3' : 'transparent',
+                '&:hover': {
+                  bgcolor: '#b2dfdb',
+                }
+              }}
+              onClick={() => handleNavigation('/referidores')}
+            >
+              <ListItemIcon>
+                <WorkOutline sx={{ 
+                  fontSize: 20, 
+                  color: isActive('/referidores') ? '#059669' : '#6b7280' 
+                }} />
+              </ListItemIcon>
+              <ListItemText 
+                primary="Referidores" 
+                sx={{
+                  '& .MuiListItemText-primary': {
+                    fontWeight: isActive('/referidores') ? 600 : 400,
+                    color: isActive('/referidores') ? '#059669' : '#374151'
                   }
                 }}
               />

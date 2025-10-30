@@ -27,19 +27,12 @@ import {
   Phone,
   Email,
 } from '@mui/icons-material';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import dayjs from 'dayjs';
-import 'dayjs/locale/es';
+
 import MainLayout from '../../components/layout/MainLayout';
 import { entrenadoresData } from './entrenadoresData';
 import CrearEntrenadorModal from '../../components/modals/CrearEntrenadorModal';
 import VerEntrenadorModal from '../../components/modals/VerEntrenadorModal';
 import EditarEntrenadorModal from '../../components/modals/EditarEntrenadorModal';
-
-// Configurar dayjs en español
-dayjs.locale('es');
 
 const Entrenadores = () => {
   const [selected, setSelected] = useState([]);
@@ -47,8 +40,7 @@ const Entrenadores = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
   const [sedeFilter, setSedeFilter] = useState('Todos');
-  const [startDate, setStartDate] = useState(null);
-  const [endDate, setEndDate] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isVerModalOpen, setIsVerModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -163,7 +155,7 @@ const Entrenadores = () => {
     // Por ejemplo, actualizar el estado local o hacer una llamada a la API
   };
 
-  // Datos filtrados basados en el término de búsqueda y sede
+  // Datos filtrados basados en el término de búsqueda, sede y estado
   const filteredData = useMemo(() => {
     return entrenadoresData.filter((row) => {
       const matchesSearch = 
@@ -173,10 +165,11 @@ const Entrenadores = () => {
         row.sede.toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchesSede = sedeFilter === 'Todos' || row.sede === sedeFilter;
+      const matchesStatus = statusFilter === '' || row.accountStatus === statusFilter;
       
-      return matchesSearch && matchesSede;
+      return matchesSearch && matchesSede && matchesStatus;
     });
-  }, [searchTerm, sedeFilter]);
+  }, [searchTerm, sedeFilter, statusFilter]);
 
   // Datos paginados
   const paginatedData = useMemo(() => {
@@ -202,9 +195,8 @@ const Entrenadores = () => {
   const sedesUnicas = [...new Set(entrenadoresData.map(item => item.sede))];
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <MainLayout breadcrumbs={['Dashboard', 'Administración', 'Entrenadores']}>
-        <Box>
+    <MainLayout breadcrumbs={['Dashboard', 'Administración', 'Entrenadores']}>
+      <Box>
           {/* Header */}
           <Box sx={{ mb: 4 }}>
             <Typography variant="h4" sx={{ fontWeight: 500, color: '#1a1a1a' }}>
@@ -247,43 +239,26 @@ const Entrenadores = () => {
                 }}
               />
 
-              {/* Fecha Inicio */}
-              <DatePicker
-                label="Fecha inicio"
-                value={startDate}
-                onChange={(newValue) => setStartDate(newValue)}
-                slotProps={{
-                  textField: {
-                    size: 'small',
-                    sx: {
-                      flex: '1 1 150px',
-                      '& .MuiOutlinedInput-root': {
-                        bgcolor: 'white',
-                        borderRadius: 2,
-                      },
-                    },
+              {/* Filtro por Estado */}
+              <TextField
+                select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                size="small"
+                sx={{
+                  minWidth: 120,
+                  '& .MuiOutlinedInput-root': {
+                    bgcolor: 'white',
+                    borderRadius: 2,
                   },
                 }}
-              />
-
-              {/* Fecha Fin */}
-              <DatePicker
-                label="Fecha fin"
-                value={endDate}
-                onChange={(newValue) => setEndDate(newValue)}
-                slotProps={{
-                  textField: {
-                    size: 'small',
-                    sx: {
-                      flex: '1 1 150px',
-                      '& .MuiOutlinedInput-root': {
-                        bgcolor: 'white',
-                        borderRadius: 2,
-                      },
-                    },
-                  },
-                }}
-              />
+                label="Estado"
+              >
+                <MenuItem value="">Todos los estados</MenuItem>
+                <MenuItem value="Active">Activo</MenuItem>
+                <MenuItem value="Suspended">Suspendido</MenuItem>
+                <MenuItem value="Inactive">Inactivo</MenuItem>
+              </TextField>
 
               {/* Filtro de Sede */}
               <TextField
@@ -536,7 +511,6 @@ const Entrenadores = () => {
           entrenador={selectedEntrenador}
         />
       </MainLayout>
-    </LocalizationProvider>
   );
 };
 

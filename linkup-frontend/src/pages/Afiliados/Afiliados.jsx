@@ -25,27 +25,18 @@ import {
   LocationOn,
   Search,
 } from '@mui/icons-material';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import dayjs from 'dayjs';
-import 'dayjs/locale/es';
+
 import MainLayout from '../../components/layout/MainLayout';
 import { afiliadosData } from './afiliadosData';
 import CrearAfiliadoModal from '../../components/modals/CrearAfiliadoModal';
 import EditarAfiliadoModal from '../../components/modals/EditarAfiliadoModal';
-
-// Configurar dayjs en español
-dayjs.locale('es');
 
 const Afiliados = () => {
   const [selected, setSelected] = useState([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
-  const [attribute, setAttribute] = useState('Property');
-  const [startDate, setStartDate] = useState(null);
-  const [endDate, setEndDate] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedAfiliado, setSelectedAfiliado] = useState(null);
@@ -99,8 +90,7 @@ const Afiliados = () => {
       'Usuario': row.user,
       'Email': row.email,
       'Ubicación': row.location,
-      'Estado': row.status,
-      'Fecha de Registro': row.fechaRegistro || 'N/A'
+      'Estado': row.status
     }));
 
     // Crear el libro de trabajo
@@ -143,15 +133,20 @@ const Afiliados = () => {
     // Aquí puedes agregar la lógica para actualizar el afiliado
   };
 
-  // Datos filtrados basados en el término de búsqueda
+  // Datos filtrados basados en el término de búsqueda y estado
   const filteredData = useMemo(() => {
-    return afiliadosData.filter((row) =>
-      row.user.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      row.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      row.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      row.status.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [searchTerm]);
+    return afiliadosData.filter((row) => {
+      const matchesSearch = searchTerm === '' || 
+        row.user.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        row.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        row.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        row.status.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesStatus = statusFilter === '' || row.status === statusFilter;
+      
+      return matchesSearch && matchesStatus;
+    });
+  }, [searchTerm, statusFilter]);
 
   // Datos paginados
   const paginatedData = useMemo(() => {
@@ -160,9 +155,8 @@ const Afiliados = () => {
   }, [filteredData, page, rowsPerPage]);
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <MainLayout breadcrumbs={['Dashboard', 'Administracion', 'Afiliados']}>
-        <Box>
+    <MainLayout breadcrumbs={['Dashboard', 'Administracion', 'Afiliados']}>
+      <Box>
           {/* Header */}
           <Box sx={{ mb: 4 }}>
             <Typography variant="h4" sx={{ fontWeight: 500, color: '#1a1a1a' }}>
@@ -205,49 +199,11 @@ const Afiliados = () => {
                 }}
               />
 
-              {/* Fecha Inicio */}
-              <DatePicker
-                label="Fecha inicio"
-                value={startDate}
-                onChange={(newValue) => setStartDate(newValue)}
-                slotProps={{
-                  textField: {
-                    size: 'small',
-                    sx: {
-                      flex: '1 1 150px',
-                      '& .MuiOutlinedInput-root': {
-                        bgcolor: 'white',
-                        borderRadius: 2,
-                      },
-                    },
-                  },
-                }}
-              />
-
-              {/* Fecha Fin */}
-              <DatePicker
-                label="Fecha fin"
-                value={endDate}
-                onChange={(newValue) => setEndDate(newValue)}
-                slotProps={{
-                  textField: {
-                    size: 'small',
-                    sx: {
-                      flex: '1 1 150px',
-                      '& .MuiOutlinedInput-root': {
-                        bgcolor: 'white',
-                        borderRadius: 2,
-                      },
-                    },
-                  },
-                }}
-              />
-
-              {/* Attribute */}
+              {/* Filtro por Estado */}
               <TextField
                 select
-                value={attribute}
-                onChange={(e) => setAttribute(e.target.value)}
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
                 size="small"
                 sx={{
                   flex: '1 1 200px',
@@ -256,11 +212,12 @@ const Afiliados = () => {
                     borderRadius: 2,
                   },
                 }}
-                label="Atributo"
+                label="Filtrar por Estado"
               >
-                <MenuItem value="Property">Propiedad</MenuItem>
-                <MenuItem value="Status">Estado</MenuItem>
-                <MenuItem value="Location">Ubicación</MenuItem>
+                <MenuItem value="">Todos los estados</MenuItem>
+                <MenuItem value="Activo">Activo</MenuItem>
+                <MenuItem value="Inactivo">Inactivo</MenuItem>
+                <MenuItem value="Pendiente">Pendiente</MenuItem>
               </TextField>
 
               {/* Filter Button */}
@@ -481,7 +438,6 @@ const Afiliados = () => {
           afiliado={selectedAfiliado}
         />
       </MainLayout>
-    </LocalizationProvider>
   );
 };
 

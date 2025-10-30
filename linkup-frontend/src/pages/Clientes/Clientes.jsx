@@ -40,7 +40,7 @@ import { useSearchParams } from 'react-router-dom';
 // Configurar dayjs en español
 dayjs.locale('es');
 
-// Lista estática de etapas con sus IDs (nombre y valor)
+// Lista estática de etapas con sus IDs (nombre y valor) /Dynamic
 const STAGES = [
   { name: 'Lead information', id: 73075903 },
   { name: 'Initial contact', id: 73074731 },
